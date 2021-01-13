@@ -1,0 +1,54 @@
+version: "3.7"
+services:
+
+  nginx:
+    build:
+      context: './nginx'
+    image: 'nginx:1.19.6'
+    # This volume allows to you configure nginx.conf from host to volume
+    volumes:
+      - '${PWD}/nginx.conf:/etc/nginx/conf.d/nginx.conf:ro'
+    ports:
+      - '80:80'
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - frontend-network
+
+  frontend:
+    image: 'react-frontend-image'
+    container_name: 'frontend'
+    ports:
+      - '0.0.0.0:3000:3000'
+    networks:
+      - frontend-network
+
+  backend:
+    depends_on:
+      - database
+    image: 'flask-backend-image'
+    container_name: 'flask-backend'
+    ports:
+      - '0.0.0.0:5000:5000'
+    networks:
+      - frontend-network
+      - database-network
+  database:
+    image: 'postgres-database-image'
+    container_name: 'postgres-database'
+    volumes:
+      - 'database-volume:/var/lib/postgresql/data'
+    networks:
+        - "database-network"
+    ports:
+      - '0.0.0.0:5432:5432'
+
+volumes:
+    database-volume:
+
+networks:
+  database-network:
+    name: database-network
+  frontend-network:
+    name: frontend-network
